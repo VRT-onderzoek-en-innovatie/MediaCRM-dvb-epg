@@ -20,14 +20,14 @@ void Section_Buffer::process_ts_packet(const char *ts_packet) {
 	}
 
 	Buffer *pid_buf = NULL;
+	typeof(section_buffer.begin()) it;
+	if( (it = section_buffer.find(pid) ) != section_buffer.end() ) {
+		pid_buf = it->second;
+	}
+
 	bool payload_unit_start_indicator = ts_packet[1] & 0x40;
 	if( payload_unit_start_indicator ) {
 		uint8_t pointer = ts_packet[payload_start];
-
-		typeof(section_buffer.begin()) it;
-		if( (it = section_buffer.find(pid) ) != section_buffer.end() ) {
-			pid_buf = it->second;
-		}
 			
 		if( pid_buf && pointer != 0) {
 			// add the first few bytes to the previous section
