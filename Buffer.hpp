@@ -12,6 +12,8 @@ public:
 	Buffer(size_t size);
 
 	void append(const char *append, size_t nbytes);
+	void flush() { w_pointer = buf; }
+
 	size_t length() {return w_pointer - buf;}
 };
 
