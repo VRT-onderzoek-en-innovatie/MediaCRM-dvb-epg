@@ -5,13 +5,13 @@
 
 class Buffer {
 protected:
-	char *w_pointer;
+	unsigned char *w_pointer;
 public:
-	char *buf;
+	unsigned char *buf;
 
 	Buffer(size_t size);
 
-	void append(const char *append, size_t nbytes);
+	void append(const unsigned char *append, size_t nbytes);
 	void flush() { w_pointer = buf; }
 
 	size_t length() {return w_pointer - buf;}

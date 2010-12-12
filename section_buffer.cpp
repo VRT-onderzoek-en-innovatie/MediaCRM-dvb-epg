@@ -1,7 +1,7 @@
 #include "section_buffer.hpp"
 #include <assert.h>
 
-void Section_Buffer::process_ts_packet(const char *ts_packet) {
+void Section_Buffer::process_ts_packet(const byte *ts_packet) {
 	assert( ts_packet[0] == 0x47 ); // TS sync byte
 	uint16_t pid = ((ts_packet[1]&0x1f)<<8) | ts_packet[2];
 

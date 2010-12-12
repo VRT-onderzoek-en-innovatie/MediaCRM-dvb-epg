@@ -3,7 +3,7 @@
 #include "eit_processor.hpp"
 
 int main(int argc, char *argv[]) {
-	char ts_packet[188];
+	unsigned char ts_packet[188];
 	Section_Buffer sb;
 	EIT_processor eit;
 
