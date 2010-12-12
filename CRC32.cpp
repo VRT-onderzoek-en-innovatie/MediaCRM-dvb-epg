@@ -38,12 +38,12 @@ void CRC32::init() {
 	m_register = m_init;
 }
 
-void CRC32::append(const char* bytes, size_t nbytes) {
+void CRC32::append(const unsigned char* bytes, size_t nbytes) {
 	assert(bytes != NULL);
 	if( nbytes == 0 ) return;
 	while( nbytes-- ) {
 		m_register = (m_refin ? m_register >> 8 : m_register << 8)
-			^ m_table[ (m_refin ? m_register & 0xff : m_register >> 24) ^ *bytes++ ];
+			^ m_table[ ((m_register >> (m_refin ? 0 : 24))&0xff) ^ *bytes++ ];
 	}
 }
 

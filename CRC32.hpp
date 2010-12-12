@@ -26,7 +26,8 @@ public:
 		bool refout=1);
 	
 	void init();
-	void append(const char* bytes, size_t nbytes);
+	void append(const unsigned char *bytes, size_t nbytes);
+	void append(const signed char *bytes, size_t nbytes) { return this->append((const unsigned char*)bytes, nbytes); }
 	uint32_t crc();
 };
 
