@@ -3,10 +3,13 @@
 
 #include <string.h>
 #include <stdint.h>
+#include <time.h>
 
 class Event {
 protected:
 	uint16_t m_event_id;
+	time_t m_start;
+	time_t m_duration;
 	enum running_status {
 		undefined=0,
 		not_running=1,
