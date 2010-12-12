@@ -6,5 +6,5 @@ clean:
 test:
 	$(MAKE) -C tests test
 
-eit: main.o section_buffer.o Buffer.o eit_processor.o
+eit: main.o section_buffer.o Buffer.o eit_processor.o CRC32.o
 	g++ -o $@ $+
