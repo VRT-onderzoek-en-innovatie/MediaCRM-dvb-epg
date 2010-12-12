@@ -29,7 +29,7 @@ void EIT_processor::process_section(byte *section, size_t nsection) {
 		CRC32 c(0x04C11DB7, 0xffffffff, 0x00000000, 0, 0);
 		c.append(section, 3+section_length-4);
 		if( c.crc() != crc ) {
-			fprintf(stderr, "CRC mismatch (0x%08x != 0x%08x, %lu), ignoring section\n", c.crc(), crc, section_length);
+			fprintf(stderr, "CRC mismatch, ignoring section\n");
 			return;
 		}
 	}
