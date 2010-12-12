@@ -33,7 +33,7 @@ void Section_Buffer::process_ts_packet(const byte *ts_packet) {
 			// add the first few bytes to the previous section
 			pid_buf->append( ts_packet+payload_start, pointer );
 		}
-		payload_start += pointer;
+		payload_start += 1 + pointer;
 
 		if( pid_buf ) {
 			// process the previous section
