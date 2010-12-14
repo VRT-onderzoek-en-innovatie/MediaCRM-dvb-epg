@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-void EIT_processor::process_section(byte *section, size_t nsection) {
+void EIT_processor::process_section(const unsigned char *section, size_t nsection) {
 	assert(section != NULL);
 	assert(nsection >= 14+4); // 0 events
 
@@ -35,18 +35,17 @@ void EIT_processor::process_section(byte *section, size_t nsection) {
 		}
 	}
 
-	byte *event = section + 14;
-	byte *event_end = event + section_length - 11 - 4;
-	while( event < event_end ) {
-		Event *e = new Event;
-		event += e->parse_event(event);
-		delete e;
-	}
-
 	printf("EIT decode: tid:%02x-%02x sid:%04x/%04x/%04x ver:%u sec:%u-%u/%u\n",
 		table_id, last_table_id,
 		service_id, transport_srteam_id, original_network_id,
 		version_number,
 		section_number, segment_last_section_number, last_section_number);
-	
+
+	const unsigned char *event = section + 14;
+	const unsigned char *event_end = event + section_length - 11 - 4;
+	while( event < event_end ) {
+		Event *e = new Event(&event);
+		printf("Event: %u\n", e->m_event_id);
+		delete e;
+	}
 }

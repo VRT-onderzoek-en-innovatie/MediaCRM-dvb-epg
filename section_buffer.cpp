@@ -1,7 +1,7 @@
 #include "section_buffer.hpp"
 #include <assert.h>
 
-void Section_Buffer::process_ts_packet(const byte *ts_packet) {
+void Section_Buffer::process_ts_packet(const unsigned char *ts_packet) {
 	assert( ts_packet[0] == 0x47 ); // TS sync byte
 	uint16_t pid = ((ts_packet[1]&0x1f)<<8) | ts_packet[2];
 
@@ -28,7 +28,7 @@ void Section_Buffer::process_ts_packet(const byte *ts_packet) {
 	bool payload_unit_start_indicator = ts_packet[1] & 0x40;
 	if( payload_unit_start_indicator ) {
 		uint8_t pointer = ts_packet[payload_start];
-			
+
 		if( pid_buf && pointer != 0) {
 			// add the first few bytes to the previous section
 			pid_buf->append( ts_packet+payload_start, pointer );

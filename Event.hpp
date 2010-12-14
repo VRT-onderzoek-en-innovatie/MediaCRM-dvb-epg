@@ -4,9 +4,10 @@
 #include <string.h>
 #include <stdint.h>
 #include <time.h>
+#include "Descriptor.hpp"
 
 class Event {
-protected:
+public:
 	uint16_t m_event_id;
 	time_t m_start;
 	time_t m_duration;
@@ -24,7 +25,7 @@ protected:
 		scrambled=1 } m_free_CA_mode;
 
 public:
-	size_t parse_event(const unsigned char *events);
+	Event(const unsigned char **event);
 };
 
 #endif // __EVENT_HPP__
