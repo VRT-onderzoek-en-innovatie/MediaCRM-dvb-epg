@@ -3,12 +3,17 @@
 
 #include <stdint.h>
 
+namespace Descriptor {
+
 class Descriptor {
 public:
 	uint8_t m_tag;
 	uint8_t m_length;
 
-	static Descriptor* descriptor_factory(const unsigned char **descriptor);
 };
+
+Descriptor* descriptor_factory(const unsigned char **descriptor);
+
+} // namespace
 
 #endif // __DESCRIPTOR_HPP__

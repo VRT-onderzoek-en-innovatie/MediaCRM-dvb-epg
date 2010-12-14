@@ -4,12 +4,16 @@
 #include "Descriptor.hpp"
 #include <stdint.h>
 
-class Descriptor_Unknown : public Descriptor{
+namespace Descriptor {
+
+class Unknown : public Descriptor {
 public:
 	uint8_t m_tag;
 	uint8_t m_length;
 
-	Descriptor_Unknown(const unsigned char **descriptor);
+	Unknown(const unsigned char **descriptor);
 };
+
+} // namespace
 
 #endif // __DESCRIPTOR_UNKNOWN_HPP__

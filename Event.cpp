@@ -34,7 +34,7 @@ Event::Event(const unsigned char **event) {
 	
 	const unsigned char *event_end = *event + descriptors_loop_length;
 	while( *event < event_end ) {
-		Descriptor *d = Descriptor::descriptor_factory(event);
+		Descriptor::Descriptor *d = Descriptor::descriptor_factory(event);
 
 		delete d;
 	}
