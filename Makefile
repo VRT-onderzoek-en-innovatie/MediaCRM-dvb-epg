@@ -6,5 +6,6 @@ clean:
 test:
 	$(MAKE) -C tests test
 
-eit: main.o section_buffer.o Buffer.o eit_processor.o CRC32.o Event.o Descriptor/Descriptor.o Descriptor/Unknown.o
+DESCRIPTORS := Descriptor Unknown ShortEvent
+eit: main.o section_buffer.o Buffer.o eit_processor.o CRC32.o Event.o $(foreach d,$(DESCRIPTORS),Descriptor/$d.o)
 	g++ -o $@ $+

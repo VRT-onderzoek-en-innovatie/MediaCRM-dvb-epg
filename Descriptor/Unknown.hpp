@@ -8,9 +8,6 @@ namespace Descriptor {
 
 class Unknown : public Descriptor {
 public:
-	uint8_t m_tag;
-	uint8_t m_length;
-
 	Unknown(const unsigned char **descriptor);
 };
 

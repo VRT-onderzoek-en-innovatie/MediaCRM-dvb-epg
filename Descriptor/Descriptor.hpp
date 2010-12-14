@@ -9,7 +9,6 @@ class Descriptor {
 public:
 	uint8_t m_tag;
 	uint8_t m_length;
-
 };
 
 Descriptor* descriptor_factory(const unsigned char **descriptor);
