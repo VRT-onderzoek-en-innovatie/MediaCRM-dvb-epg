@@ -22,12 +22,12 @@ void EIT_channel_processor::parse_segment(const unsigned char *section, size_t n
 	uint8_t segment_last_section_number = section[12];
 	uint8_t last_table_id = section[13];
 
-	const unsigned char *section_end = section+3 + section_length - 4; // "immediately following the length field" + legth - CRC32
+	const unsigned char *section_end = section+3 + section_length - 4; // "immediately following the length field" + length - CRC32
 	section += 14;
 
 	while( section < section_end ) {
 		Event *e = new Event(&section);
-		printf("%d\n", e->m_event_id);
+
 		delete e;
 	}
 }
