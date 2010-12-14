@@ -29,7 +29,7 @@ public:
 	};
 	std::map< struct channel_id, EIT_channel_processor > m_channels;
 
-	virtual void process_section(const unsigned char *section, size_t nsection);
+	virtual void process_sections(const unsigned char *sections, size_t nsections);
 };
 
 #endif // __EIT_PROCESSOR_HPP__

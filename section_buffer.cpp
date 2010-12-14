@@ -41,7 +41,7 @@ void Section_Buffer::process_ts_packet(const unsigned char *ts_packet) {
 				pid_map.equal_range(pid);
 
 			for( typeof(pid_map.begin()) it = processors.first; it != processors.second; ++it ) {
-				it->second->process_section( pid_buf->buf, pid_buf->length() );
+				it->second->process_sections( pid_buf->buf, pid_buf->length() );
 			}
 			pid_buf->flush();
 		} else {

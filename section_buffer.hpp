@@ -8,7 +8,7 @@
 
 class Section_Processor {
 public:
-	virtual void process_section(const unsigned char *section, size_t nsection) {}
+	virtual void process_sections(const unsigned char *sections, size_t nsections)=0;
 };
 
 class Section_Buffer {
