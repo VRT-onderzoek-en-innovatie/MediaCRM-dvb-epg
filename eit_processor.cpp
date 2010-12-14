@@ -42,9 +42,27 @@ void EIT_processor::process_sections(const unsigned char *sections, size_t nsect
 	while( sections < sections_end ) {
 		assert(sections_end-sections >= 14+4); // 0 events
 
-		//uint8_t table_id = section[0];
+		uint8_t table_id = section[0];
 		assert( (sections[1]&0x80) == 0x80 ); // sections syntax indicator
 		uint16_t section_length = ((sections[1]&0x0f)<<8) | sections[2];
+		if( table_id == 0xff ) { // padding table, skip
+			sections += 3 + section_length;
+			continue;
+		}
+		if( table_id == 0x4e || table_id == 0x4f ) {
+			// now/next tables, we want more!
+			sections += 3 + section_length;
+			continue;
+		}
+		if( table_id < 0x50 || table_id > 0x6f ) {
+			// shouldn't be here
+			fprintf(stderr, "Unexpected table (id 0x%02x) ignored\n", table_id);
+			sections += 3 + section_length;
+			continue;
+		}
+
+		assert( table_id >= 0x50 && table_id <= 0x6f );
+
 		uint16_t service_id = (sections[3]<<8) | sections[4];
 		//uint8_t version_number = (sections[5]&0x3e)>>1;
 		//bool current_next_indicator = (sections[5]&0x01);
@@ -64,6 +82,9 @@ void EIT_processor::process_sections(const unsigned char *sections, size_t nsect
 			c.append(sections, 3+section_length-4);
 			if( c.crc() != crc ) {
 				fprintf(stderr, "CRC mismatch, ignoring sections\n");
+				// we can't recover by skipping only this section:
+				// section_length might be corrupt
+				// throw away everything
 				return;
 			}
 		}
