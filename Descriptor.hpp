@@ -8,7 +8,7 @@ public:
 	uint8_t m_tag;
 	uint8_t m_length;
 
-	Descriptor(const unsigned char **descriptor);
+	static Descriptor* descriptor_factory(const unsigned char **descriptor);
 };
 
 #endif // __DESCRIPTOR_HPP__

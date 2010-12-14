@@ -1,9 +1,12 @@
 #include "Descriptor.hpp"
+#include "Descriptor-Unknown.hpp"
+#include <assert.h>
 
-Descriptor::Descriptor(const unsigned char **descriptor) {
-	m_tag = (*descriptor)[0];
-	m_length = (*descriptor)[1];
-	*descriptor += 2;
-
-	*descriptor += m_length;
+Descriptor* Descriptor::descriptor_factory(const unsigned char **descriptor) {
+	uint8_t tag = (*descriptor)[0];
+	switch( tag ) {
+	default:
+		return new Descriptor_Unknown(descriptor);
+	}
+	assert(0); // should never ever get here
 }
