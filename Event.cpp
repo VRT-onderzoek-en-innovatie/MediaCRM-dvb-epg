@@ -35,8 +35,12 @@ Event::Event(const unsigned char **event) {
 	const unsigned char *event_end = *event + descriptors_loop_length;
 	while( *event < event_end ) {
 		Descriptor::Descriptor *d = Descriptor::descriptor_factory(event);
-
-		delete d;
+		m_descriptors.push_back(d);
 	}
 }
 
+Event::~Event() {
+	for( typeof(m_descriptors.begin()) it = m_descriptors.begin(); it != m_descriptors.end(); ++it) {
+		delete *it;
+	}
+}

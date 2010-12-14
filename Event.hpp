@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <time.h>
 #include "Descriptor/Descriptor.hpp"
+#include <list>
 
 class Event {
 public:
@@ -24,8 +25,10 @@ public:
 		free=0,
 		scrambled=1 } m_free_CA_mode;
 
-public:
+	std::list<Descriptor::Descriptor*> m_descriptors;
+
 	Event(const unsigned char **event);
+	~Event();
 };
 
 #endif // __EVENT_HPP__
