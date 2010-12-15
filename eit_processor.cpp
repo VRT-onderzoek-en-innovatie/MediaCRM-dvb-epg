@@ -40,9 +40,14 @@ void EIT_processor::process_sections(const unsigned char *sections, size_t nsect
 	const unsigned char *sections_end = sections + nsections;
 	
 	while( sections < sections_end ) {
-		assert(sections_end-sections >= 14+4); // 0 events
+		uint8_t table_id = sections[0];
+		if( table_id == 0xff && sections_end - sections < 3 ) {
+			// incomplete stuffing table, skip everything till end
+			break;
+		}
 
-		uint8_t table_id = section[0];
+		assert(sections_end-sections >= 3); // only tag & length
+
 		assert( (sections[1]&0x80) == 0x80 ); // sections syntax indicator
 		uint16_t section_length = ((sections[1]&0x0f)<<8) | sections[2];
 		if( table_id == 0xff ) { // padding table, skip
