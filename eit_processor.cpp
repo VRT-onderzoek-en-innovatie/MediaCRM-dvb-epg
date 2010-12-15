@@ -1,6 +1,5 @@
 #include "eit_processor.hpp"
 #include "CRC32.hpp"
-#include "Event.hpp"
 #include "debug.h"
 #include <stdint.h>
 #include <math.h>
@@ -32,6 +31,10 @@ void EIT_channel_processor::parse_segment(const unsigned char *section, size_t n
 	if( version_number != m_version[table_id&0x0f] ) {
 		m_version[table_id&0x0f] = version_number;
 		// Something changed, flush everything
+		for( typeof(m_events.begin()) i = m_events.begin(); i != m_events.end(); ++i ) {
+			delete *i;
+		}
+		m_events.clear();
 		// wait for the first section of the first segment of the first sub-table
 		m_waiting_for_table = table_id&0xf0; // 0x50 or 0x60
 		m_waiting_for_section = 0x00;
@@ -46,8 +49,7 @@ void EIT_channel_processor::parse_segment(const unsigned char *section, size_t n
 	section += 14;
 	while( section < section_end ) {
 		Event *e = new Event(&section);
-
-		delete e;
+		m_events.push_back(e);
 	}
 
 	if( section_number < segment_last_section_number ) {
@@ -69,7 +71,8 @@ void EIT_channel_processor::parse_segment(const unsigned char *section, size_t n
 			} else if( table_id == last_table_id ) {
 				// We're done
 				m_waiting_for_table = 0xff; // stop listening
-				printf("Fully received\n");
+				// Will be reset on a version change
+				dump_epg();
 			} else {
 				assert( table_id <= last_table_id ); // abort()
 			}
@@ -82,6 +85,13 @@ void EIT_channel_processor::parse_segment(const unsigned char *section, size_t n
 }
 
 EIT_channel_processor::~EIT_channel_processor() {
+	for( typeof(m_events.begin()) i = m_events.begin(); i != m_events.end(); ++i ) {
+		delete *i;
+	}
+}
+
+void EIT_channel_processor::dump_epg() const {
+	printf("Got %lu events\n", m_events.size());
 }
 
 void EIT_processor::process_sections(const unsigned char *sections, size_t nsections) {

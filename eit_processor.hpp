@@ -2,6 +2,7 @@
 #define __EIT_PROCESSOR_HPP__
 
 #include "section_buffer.hpp"
+#include "Event.hpp"
 #include <stdint.h>
 #include <map>
 #include <list>
@@ -14,10 +15,13 @@ public:
 	uint8_t m_waiting_for_section;
 	bool m_section_gap_allowed;
 
+	std::list<Event*> m_events;
+
 	EIT_channel_processor();
 	~EIT_channel_processor();
 
 	void parse_segment(const unsigned char *section, size_t nsection);
+	void dump_epg() const;
 };
 
 class EIT_processor: public Section_Processor {
