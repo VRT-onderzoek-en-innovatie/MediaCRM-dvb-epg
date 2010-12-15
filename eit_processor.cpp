@@ -3,7 +3,12 @@
 #include "Event.hpp"
 #include "debug.h"
 #include <stdint.h>
+#include <math.h>
 #include <stdio.h>
+
+EIT_channel_processor::EIT_channel_processor() {
+	for( int i = 0; i < 16; i++ ) { m_version[i] = 0x20; } // Impossible value, anything will differ
+}
 
 void EIT_channel_processor::parse_segment(const unsigned char *section, size_t nsection) {
 	assert(section != NULL);
@@ -22,13 +27,57 @@ void EIT_channel_processor::parse_segment(const unsigned char *section, size_t n
 	uint8_t segment_last_section_number = section[12];
 	uint8_t last_table_id = section[13];
 
+	if( !current_next_indicator ) return; // table not yet applicable, skip
+
+	if( version_number != m_version[table_id&0x0f] ) {
+		m_version[table_id&0x0f] = version_number;
+		// Something changed, flush everything
+		// wait for the first section of the first segment of the first sub-table
+		m_waiting_for_table = table_id&0xf0; // 0x50 or 0x60
+		m_waiting_for_section = 0x00;
+		m_section_gap_allowed = false;
+	}
+
+	if( table_id != m_waiting_for_table ) return;
+	if( !m_section_gap_allowed && section_number != m_waiting_for_section ) return;
+	if( m_section_gap_allowed && section_number < m_waiting_for_section ) return;
+
 	const unsigned char *section_end = section+3 + section_length - 4; // "immediately following the length field" + length - CRC32
 	section += 14;
-
 	while( section < section_end ) {
 		Event *e = new Event(&section);
 
 		delete e;
+	}
+
+	if( section_number < segment_last_section_number ) {
+		// wait for next section of this segment
+		m_waiting_for_section = section_number+1;
+		m_section_gap_allowed = false;
+	} else if( section_number == segment_last_section_number ) {
+		// wait for next segment
+		if( section_number < last_section_number ) {
+			// in this table
+			m_waiting_for_section = section_number+1;
+			m_section_gap_allowed = true;
+		} else if( section_number == last_section_number ) {
+			// in next table
+			if( table_id < last_table_id ) {
+				m_waiting_for_table = table_id+1;
+				m_waiting_for_section = 0;
+				m_section_gap_allowed = false;
+			} else if( table_id == last_table_id ) {
+				// We're done
+				m_waiting_for_table = 0xff; // stop listening
+				printf("Fully received\n");
+			} else {
+				assert( table_id <= last_table_id ); // abort()
+			}
+		} else {
+			assert( section_number <= last_section_number ); // abort()
+		}
+	} else {
+		assert(section_number <= segment_last_section_number); // abort()
 	}
 }
 
@@ -71,7 +120,7 @@ void EIT_processor::process_sections(const unsigned char *sections, size_t nsect
 		uint16_t service_id = (sections[3]<<8) | sections[4];
 		//uint8_t version_number = (sections[5]&0x3e)>>1;
 		//bool current_next_indicator = (sections[5]&0x01);
-		//uint8_t sections_number = sections[6];
+		//uint8_t section_number = sections[6];
 		//uint8_t last_sections_number = sections[7];
 		uint16_t transport_stream_id = (sections[8]<<8) | sections[9];
 		uint16_t original_network_id = (sections[10]<<8) | sections[11];
@@ -93,7 +142,7 @@ void EIT_processor::process_sections(const unsigned char *sections, size_t nsect
 				return;
 			}
 		}
-	
+
 		struct channel_id chan_id = { original_network_id, transport_stream_id, service_id };
 		std::pair< typeof(m_channels.begin()), bool > chan_insert
 			= m_channels.insert( std::pair< struct channel_id, EIT_channel_processor >

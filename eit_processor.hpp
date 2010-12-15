@@ -8,9 +8,16 @@
 
 class EIT_channel_processor {
 public:
-	void parse_segment(const unsigned char *section, size_t nsection);
+	uint8_t m_version[16]; // for sub-table 0x50-0x5f or 0x60-0x6f
 
+	uint8_t m_waiting_for_table;
+	uint8_t m_waiting_for_section;
+	bool m_section_gap_allowed;
+
+	EIT_channel_processor();
 	~EIT_channel_processor();
+
+	void parse_segment(const unsigned char *section, size_t nsection);
 };
 
 class EIT_processor: public Section_Processor {
