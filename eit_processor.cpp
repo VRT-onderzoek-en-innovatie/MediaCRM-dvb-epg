@@ -120,7 +120,7 @@ void EIT_processor_channel::parse_table(const unsigned char *table, size_t ntabl
 
 	typeof(m_tables.begin()) t = m_tables.find(table_id);
 	if( t != m_tables.end() ) {
-		if( cyclic_compare(version_number, t->second.m_version, 0x20) <= 0 ) {
+		if( cyclic_compare(version_number, t->second->m_version, 0x20) <= 0 ) {
 			// This or a more recent version is already fully processed
 			// we're done
 			return;
@@ -128,9 +128,15 @@ void EIT_processor_channel::parse_table(const unsigned char *table, size_t ntabl
 	}
 	// This is a newer version of the one we already have
 	std::pair< typeof(m_tables_processing.begin()) , bool > table_insert
-		= m_tables_processing.insert( std::pair< uint8_t, EIT_processor_channel_table > (
-			table_id, EIT_processor_channel_table(this, version_number) ));
-	table_insert.first->second.parse_table(table, ntable);
+		= m_tables_processing.insert( std::pair< uint8_t, EIT_processor_channel_table* > (
+			table_id, new EIT_processor_channel_table(this, version_number) ));
+	table_insert.first->second->parse_table(table, ntable);
+}
+
+EIT_processor_channel::~EIT_processor_channel() {
+	for( typeof(m_tables_processing.begin()) it = m_tables_processing.begin(); it != m_tables_processing.end(); ++it) {
+		delete it->second;
+	}
 }
 
 EIT_processor_channel_table::EIT_processor_channel_table(EIT_processor_channel *parent, uint8_t ver) :
@@ -192,15 +198,21 @@ void EIT_processor_channel_table::parse_table(const unsigned char *table, size_t
 	}
 }
 
+EIT_processor_channel_table::~EIT_processor_channel_table() {
+	for( typeof(m_events.begin()) it = m_events.begin(); it != m_events.end(); ++it) {
+		delete *it;
+	}
+}
+
 void EIT_processor_channel::table_done(uint8_t table_id) {
 	typeof(m_tables_processing.begin()) it = m_tables_processing.find(table_id);
 	m_tables.erase(table_id);
-	m_tables.insert( std::pair<uint8_t, EIT_processor_channel_table>( table_id, it->second ) );
+	m_tables.insert( std::pair<uint8_t, EIT_processor_channel_table* >( table_id, it->second ) );
 	m_tables_processing.erase(it);
 
 	fprintf(stderr, "%04x/%04x/%04x updated data in table %02x (v%d)\n",
 		m_chan.original_network_id, m_chan.transport_stream_id, m_chan.service_id,
-		table_id, it->second.m_version);
+		table_id, it->second->m_version);
 
 	m_parent->channel_done(m_chan);
 }

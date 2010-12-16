@@ -27,8 +27,10 @@ public:
 	uint8_t m_version;
 	uint8_t m_waiting_for_section;
 	bool m_waiting_for_section_gap_allowed;
+	std::list< Event* > m_events;
 
 	EIT_processor_channel_table(EIT_processor_channel *parent, uint8_t ver = 0);
+	~EIT_processor_channel_table();
 	void parse_table(const unsigned char *table, size_t ntable);
 };
 
@@ -38,10 +40,11 @@ public:
 	EIT_processor *m_parent;
 	struct channel_id m_chan;
 	uint8_t m_last_table_id;
-	std::map< uint8_t, EIT_processor_channel_table > m_tables;
-	std::map< uint8_t, EIT_processor_channel_table > m_tables_processing;
+	std::map< uint8_t, EIT_processor_channel_table* > m_tables;
+	std::map< uint8_t, EIT_processor_channel_table* > m_tables_processing;
 
 	EIT_processor_channel(EIT_processor *parent);
+	~EIT_processor_channel();
 	void parse_table(const unsigned char *table, size_t ntable);
 	void table_done(uint8_t table_id);
 };
