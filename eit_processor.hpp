@@ -20,33 +20,38 @@ struct channel_id {
 	}
 };
 
-class EIT_processor; // Needs to be declared here
-class EIT_channel_processor {
+class EIT_processor_channel; // declaration
+class EIT_processor_channel_table {
+public:
+	EIT_processor_channel *m_parent;
+	uint8_t m_version;
+	uint8_t m_waiting_for_section;
+	bool m_waiting_for_section_gap_allowed;
+
+	EIT_processor_channel_table(EIT_processor_channel *parent, uint8_t ver = 0);
+	void parse_table(const unsigned char *table, size_t ntable);
+};
+
+class EIT_processor; // declaration
+class EIT_processor_channel {
 public:
 	EIT_processor *m_parent;
-	struct channel_id m_channel;
+	struct channel_id m_chan;
+	uint8_t m_last_table_id;
+	std::map< uint8_t, EIT_processor_channel_table > m_tables;
+	std::map< uint8_t, EIT_processor_channel_table > m_tables_processing;
 
-	uint8_t m_version[16]; // for sub-table 0x50-0x5f or 0x60-0x6f
-	uint8_t m_waiting_for_table;
-	uint8_t m_waiting_for_section;
-	bool m_section_gap_allowed;
-
-	std::list<Event*> m_events;
-
-	EIT_channel_processor(EIT_processor *parent, struct channel_id channel);
-	~EIT_channel_processor();
-
-	void parse_segment(const unsigned char *section, size_t nsection);
-	void full_table_received() const;
+	EIT_processor_channel(EIT_processor *parent);
+	void parse_table(const unsigned char *table, size_t ntable);
+	void table_done(uint8_t table_id);
 };
 
 class EIT_processor: public Section_Processor {
 public:
-	std::map< struct channel_id, EIT_channel_processor > m_channels;
+	std::map< struct channel_id, EIT_processor_channel > m_channels;
 
 	virtual void process_sections(const unsigned char *sections, size_t nsections);
-
-	void full_table_received(struct channel_id channel, const EIT_channel_processor *proc);
+	void channel_done(struct channel_id chan);
 };
 
 #endif // __EIT_PROCESSOR_HPP__

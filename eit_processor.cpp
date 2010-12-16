@@ -5,105 +5,17 @@
 #include <math.h>
 #include <stdio.h>
 
-EIT_channel_processor::EIT_channel_processor(EIT_processor *parent, struct channel_id channel) :
-	m_parent(parent), m_channel(channel) {
-	for( int i = 0; i < 16; i++ ) { m_version[i] = 0x20; } // Impossible value, anything will differ
-}
-
-void EIT_channel_processor::parse_segment(const unsigned char *section, size_t nsection) {
-	assert(section != NULL);
-	assert(nsection >= 14+4); // 0 events
-
-	uint8_t table_id = section[0];
-	assert( (section[1]&0x80) == 0x80 ); // section syntax indicator
-	uint16_t section_length = ((section[1]&0x0f)<<8) | section[2];
-	//uint16_t service_id = (section[3]<<8) | section[4];
-	uint8_t version_number = (section[5]&0x3e)>>1;
-	bool current_next_indicator = (section[5]&0x01);
-	uint8_t section_number = section[6];
-	uint8_t last_section_number = section[7];
-	//uint16_t transport_stream_id = (section[8]<<8) | section[9];
-	//uint16_t original_network_id = (section[10]<<8) | section[11];
-	uint8_t segment_last_section_number = section[12];
-	uint8_t last_table_id = section[13];
-
-	if( !current_next_indicator ) return; // table not yet applicable, skip
-
-	if( version_number != m_version[table_id&0x0f] ) {
-		m_version[table_id&0x0f] = version_number;
-		// Something changed, flush everything
-		for( typeof(m_events.begin()) i = m_events.begin(); i != m_events.end(); ++i ) {
-			delete *i;
-		}
-		m_events.clear();
-		// wait for the first section of the first segment of the first sub-table
-		m_waiting_for_table = table_id&0xf0; // 0x50 or 0x60
-		m_waiting_for_section = 0x00;
-		m_section_gap_allowed = false;
-	}
-
-	if( table_id != m_waiting_for_table ) return;
-	if( !m_section_gap_allowed && section_number != m_waiting_for_section ) return;
-	if( m_section_gap_allowed && section_number < m_waiting_for_section ) return;
-
-	const unsigned char *section_end = section+3 + section_length - 4; // "immediately following the length field" + length - CRC32
-	section += 14;
-	while( section < section_end ) {
-		Event *e = new Event(&section);
-		m_events.push_back(e);
-	}
-
-	if( section_number < segment_last_section_number ) {
-		// wait for next section of this segment
-		m_waiting_for_section = section_number+1;
-		m_section_gap_allowed = false;
-	} else if( section_number == segment_last_section_number ) {
-		// wait for next segment
-		if( section_number < last_section_number ) {
-			// in this table
-			m_waiting_for_section = section_number+1;
-			m_section_gap_allowed = true;
-		} else if( section_number == last_section_number ) {
-			// in next table
-			if( table_id < last_table_id ) {
-				m_waiting_for_table = table_id+1;
-				m_waiting_for_section = 0;
-				m_section_gap_allowed = false;
-			} else if( table_id == last_table_id ) {
-				// We're done
-				m_waiting_for_table = 0xff; // stop listening
-				// Will be reset on a version change
-				full_table_received();
-			} else {
-				assert( table_id <= last_table_id ); // abort()
-			}
-		} else {
-			assert( section_number <= last_section_number ); // abort()
-		}
-	} else {
-		assert(section_number <= segment_last_section_number); // abort()
-	}
-}
-
-EIT_channel_processor::~EIT_channel_processor() {
-	for( typeof(m_events.begin()) i = m_events.begin(); i != m_events.end(); ++i ) {
-		delete *i;
-	}
-}
-
-void EIT_channel_processor::full_table_received() const {
-	m_parent->full_table_received(m_channel, this);
-}
-
-void EIT_processor::full_table_received(struct channel_id channel, const EIT_channel_processor *proc) {
-	printf("%x %x %x finished, %d events\n", channel.original_network_id, channel.transport_stream_id, channel.service_id,
-		proc->m_events.size());
+inline int cyclic_compare(int a, int b, int wrap) {
+	if( abs(a-b) < wrap/2 ) return a-b;
+	if( abs(a-b) == wrap/2 ) return 1; // arbitrary
+	return b-a;
 }
 
 void EIT_processor::process_sections(const unsigned char *sections, size_t nsections) {
 	assert(sections != NULL);
 	const unsigned char *sections_end = sections + nsections;
 	
+	// A single Section Payload Unit may contain multiple tables
 	while( sections < sections_end ) {
 		uint8_t table_id = sections[0];
 		if( table_id == 0xff && sections_end - sections < 3 ) {
@@ -115,6 +27,7 @@ void EIT_processor::process_sections(const unsigned char *sections, size_t nsect
 
 		assert( (sections[1]&0x80) == 0x80 ); // sections syntax indicator
 		uint16_t section_length = ((sections[1]&0x0f)<<8) | sections[2];
+
 		if( table_id == 0xff ) { // padding table, skip
 			sections += 3 + section_length;
 			continue;
@@ -134,14 +47,14 @@ void EIT_processor::process_sections(const unsigned char *sections, size_t nsect
 		assert( table_id >= 0x50 && table_id <= 0x6f );
 
 		uint16_t service_id = (sections[3]<<8) | sections[4];
-		//uint8_t version_number = (sections[5]&0x3e)>>1;
-		//bool current_next_indicator = (sections[5]&0x01);
-		//uint8_t section_number = sections[6];
-		//uint8_t last_sections_number = sections[7];
+		uint8_t version_number = (sections[5]&0x3e)>>1;
+		bool current_next_indicator = (sections[5]&0x01);
+		uint8_t section_number = sections[6];
+		uint8_t last_sections_number = sections[7];
 		uint16_t transport_stream_id = (sections[8]<<8) | sections[9];
 		uint16_t original_network_id = (sections[10]<<8) | sections[11];
-		//uint8_t segment_last_sections_number = sections[12];
-		//uint8_t last_table_id = sections[13];
+		uint8_t segment_last_sections_number = sections[12];
+		uint8_t last_table_id = sections[13];
 		uint32_t crc = (sections[3+section_length-4] << 24)
 				| (sections[3+section_length-3] << 16)
 				| (sections[3+section_length-2] << 8)
@@ -161,10 +74,142 @@ void EIT_processor::process_sections(const unsigned char *sections, size_t nsect
 
 		struct channel_id chan_id = { original_network_id, transport_stream_id, service_id };
 		std::pair< typeof(m_channels.begin()), bool > chan_insert
-			= m_channels.insert( std::pair< struct channel_id, EIT_channel_processor >
-				(chan_id, EIT_channel_processor(this, chan_id) ) ); // insert or find
-		chan_insert.first->second.parse_segment(sections, 3+section_length);
+			= m_channels.insert( std::pair< struct channel_id, EIT_processor_channel >
+				(chan_id, EIT_processor_channel(this) ) ); // insert or find
+		if( chan_insert.second ) {
+			fprintf(stderr, "Found new channel %04x/%04x/%04x\n",
+				original_network_id, transport_stream_id, service_id);
+		}
+		chan_insert.first->second.parse_table(sections, 3+section_length);
 
 		sections += 3 + section_length;
 	}
+}
+
+EIT_processor_channel::EIT_processor_channel(EIT_processor *parent) :
+	m_parent(parent),
+	m_last_table_id(0) {
+}
+
+void EIT_processor_channel::parse_table(const unsigned char *table, size_t ntable) {
+	uint8_t table_id = table[0];
+	uint16_t section_length = ((table[1]&0x0f)<<8) | table[2];
+	uint16_t service_id = (table[3]<<8) | table[4];
+	uint8_t version_number = (table[5]&0x3e)>>1;
+	bool current_next_indicator = (table[5]&0x01);
+	uint8_t section_number = table[6];
+	uint8_t last_table_number = table[7];
+	uint16_t transport_stream_id = (table[8]<<8) | table[9];
+	uint16_t original_network_id = (table[10]<<8) | table[11];
+	uint8_t segment_last_table_number = table[12];
+	uint8_t last_table_id = table[13];
+
+	m_chan.original_network_id = original_network_id;
+	m_chan.transport_stream_id = transport_stream_id;
+	m_chan.service_id = service_id;
+	
+	if( !current_next_indicator ) return; // We're only interested in current info
+
+	if( last_table_id != m_last_table_id ) {
+		fprintf(stderr, "Updating info for %04x/%04x/%04x : last_table_id = 0x%02x\n", 
+			original_network_id, transport_stream_id, service_id,
+			last_table_id);
+		m_last_table_id = last_table_id;
+		// TODO: what to flush?
+	}
+
+	typeof(m_tables.begin()) t = m_tables.find(table_id);
+	if( t != m_tables.end() ) {
+		if( cyclic_compare(version_number, t->second.m_version, 0x20) <= 0 ) {
+			// This or a more recent version is already fully processed
+			// we're done
+			return;
+		}
+	}
+	// This is a newer version of the one we already have
+	std::pair< typeof(m_tables_processing.begin()) , bool > table_insert
+		= m_tables_processing.insert( std::pair< uint8_t, EIT_processor_channel_table > (
+			table_id, EIT_processor_channel_table(this, version_number) ));
+	table_insert.first->second.parse_table(table, ntable);
+}
+
+EIT_processor_channel_table::EIT_processor_channel_table(EIT_processor_channel *parent, uint8_t ver) :
+	m_parent(parent),
+	m_version(ver),
+	m_waiting_for_section(0),
+	m_waiting_for_section_gap_allowed(false) {
+}
+
+void EIT_processor_channel_table::parse_table(const unsigned char *table, size_t ntable) {
+	uint8_t table_id = table[0];
+	uint16_t section_length = ((table[1]&0x0f)<<8) | table[2];
+	uint16_t service_id = (table[3]<<8) | table[4];
+	uint8_t version_number = (table[5]&0x3e)>>1;
+	bool current_next_indicator = (table[5]&0x01);
+	uint8_t section_number = table[6];
+	uint8_t last_section_number = table[7];
+	uint16_t transport_stream_id = (table[8]<<8) | table[9];
+	uint16_t original_network_id = (table[10]<<8) | table[11];
+	uint8_t segment_last_section_number = table[12];
+	uint8_t last_table_id = table[13];
+
+	if( cyclic_compare( version_number, m_version, 0x20 ) < 0 ) {
+		// older version
+		return;
+	}
+	if( cyclic_compare( version_number, m_version, 0x20 ) != 0 ) {
+		fprintf(stderr, "Warning for %04x/%04x/%04x table 0x%02x: "
+			"Version change before full table could be received: %d -> %d\n",
+			original_network_id, transport_stream_id, service_id, table_id,
+			m_version, version_number);
+		// TODO: flush everything
+		m_version = version_number;
+	}
+
+	if( !m_waiting_for_section_gap_allowed && section_number != m_waiting_for_section ) return;
+	if( m_waiting_for_section_gap_allowed && section_number < m_waiting_for_section ) return;
+
+	// We have the section we want
+	const unsigned char *table_end = table + 3 + section_length - 4; // "immediately following the length field" + length - CRC32
+	table += 14;
+	while( table < table_end ) {
+		Event *e = new Event(&table);
+		// TODO: something useful
+		delete e;
+	}
+
+	if( section_number < segment_last_section_number ) {
+		m_waiting_for_section = section_number+1;
+		m_waiting_for_section_gap_allowed = false;
+	} else if( section_number == segment_last_section_number ) {
+		if( section_number < last_section_number ) {
+			m_waiting_for_section = section_number+1;
+			m_waiting_for_section_gap_allowed = true;
+		} else if( section_number == last_section_number ) {
+			// Finished!
+			m_parent->table_done(table_id);
+		}
+	}
+}
+
+void EIT_processor_channel::table_done(uint8_t table_id) {
+	typeof(m_tables_processing.begin()) it = m_tables_processing.find(table_id);
+	m_tables.erase(table_id);
+	m_tables.insert( std::pair<uint8_t, EIT_processor_channel_table>( table_id, it->second ) );
+	m_tables_processing.erase(it);
+
+	fprintf(stderr, "%04x/%04x/%04x updated data in table %02x (v%d)\n",
+		m_chan.original_network_id, m_chan.transport_stream_id, m_chan.service_id,
+		table_id, it->second.m_version);
+
+	m_parent->channel_done(m_chan);
+}
+
+void EIT_processor::channel_done(struct channel_id chan) {
+	typeof( m_channels.begin() ) it = m_channels.find( chan );
+	assert( it != m_channels.end() );
+	printf("%04x/%04x/%04x has updated data\n",
+		it->second.m_chan.original_network_id,
+		it->second.m_chan.transport_stream_id,
+		it->second.m_chan.service_id);
 }
