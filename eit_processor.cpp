@@ -5,7 +5,8 @@
 #include <math.h>
 #include <stdio.h>
 
-EIT_channel_processor::EIT_channel_processor() {
+EIT_channel_processor::EIT_channel_processor(EIT_processor *parent, struct channel_id channel) :
+	m_parent(parent), m_channel(channel) {
 	for( int i = 0; i < 16; i++ ) { m_version[i] = 0x20; } // Impossible value, anything will differ
 }
 
@@ -91,7 +92,12 @@ EIT_channel_processor::~EIT_channel_processor() {
 }
 
 void EIT_channel_processor::full_table_received() const {
-	printf("Got %lu events\n", m_events.size());
+	m_parent->full_table_received(m_channel, this);
+}
+
+void EIT_processor::full_table_received(struct channel_id channel, const EIT_channel_processor *proc) {
+	printf("%x %x %x finished, %d events\n", channel.original_network_id, channel.transport_stream_id, channel.service_id,
+		proc->m_events.size());
 }
 
 void EIT_processor::process_sections(const unsigned char *sections, size_t nsections) {
@@ -156,7 +162,7 @@ void EIT_processor::process_sections(const unsigned char *sections, size_t nsect
 		struct channel_id chan_id = { original_network_id, transport_stream_id, service_id };
 		std::pair< typeof(m_channels.begin()), bool > chan_insert
 			= m_channels.insert( std::pair< struct channel_id, EIT_channel_processor >
-				(chan_id, EIT_channel_processor() ) ); // insert or find
+				(chan_id, EIT_channel_processor(this, chan_id) ) ); // insert or find
 		chan_insert.first->second.parse_segment(sections, 3+section_length);
 
 		sections += 3 + section_length;
