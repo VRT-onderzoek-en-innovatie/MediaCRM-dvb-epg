@@ -180,8 +180,7 @@ void EIT_processor_channel_table::parse_table(const unsigned char *table, size_t
 	table += 14;
 	while( table < table_end ) {
 		Event *e = new Event(&table);
-		// TODO: something useful
-		delete e;
+		m_events.push_back(e);
 	}
 
 	if( section_number < segment_last_section_number ) {
