@@ -111,9 +111,9 @@ void EIT_processor_channel::parse_table(const unsigned char *table, size_t ntabl
 	if( !current_next_indicator ) return; // We're only interested in current info
 
 	if( last_table_id != m_last_table_id ) {
-		fprintf(stderr, "Updating info for %04x/%04x/%04x : last_table_id = 0x%02x\n", 
+		fprintf(stderr, "%04x/%04x/%04x : number of tables changes %d -> %d\n", 
 			original_network_id, transport_stream_id, service_id,
-			last_table_id);
+			(m_last_table_id & 0x0f)+1, (last_table_id & 0x0f)+1);
 		m_last_table_id = last_table_id;
 		// TODO: what to flush?
 	}
