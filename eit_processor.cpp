@@ -219,8 +219,16 @@ void EIT_processor_channel::table_done(uint8_t table_id) {
 void EIT_processor::channel_done(struct channel_id chan) {
 	typeof( m_channels.begin() ) it = m_channels.find( chan );
 	assert( it != m_channels.end() );
-	printf("%04x/%04x/%04x has updated data\n",
+
+	size_t events = 0;
+	for( typeof(it->second.m_tables.begin()) table = it->second.m_tables.begin();
+	    table != it->second.m_tables.end(); table++) {
+		events += table->second->m_events.size();
+	}
+
+	printf("%04x/%04x/%04x has updated data (%lu events in total)\n",
 		it->second.m_chan.original_network_id,
 		it->second.m_chan.transport_stream_id,
-		it->second.m_chan.service_id);
+		it->second.m_chan.service_id,
+		events);
 }
