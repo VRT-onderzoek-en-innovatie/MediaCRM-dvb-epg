@@ -21,7 +21,7 @@ public:
 	~EIT_channel_processor();
 
 	void parse_segment(const unsigned char *section, size_t nsection);
-	void dump_epg() const;
+	void full_table_received() const;
 };
 
 class EIT_processor: public Section_Processor {

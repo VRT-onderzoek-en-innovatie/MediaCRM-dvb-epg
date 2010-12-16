@@ -72,7 +72,7 @@ void EIT_channel_processor::parse_segment(const unsigned char *section, size_t n
 				// We're done
 				m_waiting_for_table = 0xff; // stop listening
 				// Will be reset on a version change
-				dump_epg();
+				full_table_received();
 			} else {
 				assert( table_id <= last_table_id ); // abort()
 			}
@@ -90,7 +90,7 @@ EIT_channel_processor::~EIT_channel_processor() {
 	}
 }
 
-void EIT_channel_processor::dump_epg() const {
+void EIT_channel_processor::full_table_received() const {
 	printf("Got %lu events\n", m_events.size());
 }
 
