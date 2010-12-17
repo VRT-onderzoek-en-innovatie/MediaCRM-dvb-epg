@@ -85,7 +85,7 @@ std::string ShortEvent::XMLTV() const {
 		}
 		ret += "</title>";
 	}
-	{
+	if( m_ntext > 0 ) {
 		ret += "<desc lang=\"";
 		ret += m_ISO_639_language_code;
 		ret += "\">";
