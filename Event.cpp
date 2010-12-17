@@ -44,3 +44,14 @@ Event::~Event() {
 		delete *it;
 	}
 }
+
+std::string Event::XMLTV(char* channel) const {
+	std::string ret;
+	ret += "<programme channel=\"";
+	ret += channel;
+	ret += "\" id=\"\" start=\"\" stop=\"\">";
+
+	ret += "<title></title>";
+	ret += "</programme>";
+	return ret;
+}

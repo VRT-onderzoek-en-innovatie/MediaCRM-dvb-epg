@@ -225,18 +225,20 @@ void EIT_processor_channel::table_done(uint8_t table_id) {
 }
 
 void EIT_processor::channel_done(struct channel_id chan) {
-	typeof( m_channels.begin() ) it = m_channels.find( chan );
-	assert( it != m_channels.end() );
-
-	size_t events = 0;
-	for( typeof(it->second.m_tables.begin()) table = it->second.m_tables.begin();
-	    table != it->second.m_tables.end(); table++) {
-		events += table->second->m_events.size();
+	printf("<tv>\n");
+	for( typeof(m_channels.begin()) ch = m_channels.begin(); ch != m_channels.end(); ++ch ) {
+		char channel[15];
+		sprintf(channel, "%04x:%04x:%04x", 
+			ch->second.m_chan.original_network_id,
+			ch->second.m_chan.transport_stream_id,
+			ch->second.m_chan.service_id);
+		printf("  <channel id=\"%s\"></channel>\n", channel );
+		for( typeof(ch->second.m_tables.begin()) t = ch->second.m_tables.begin(); t != ch->second.m_tables.end(); ++t ) {
+			for( typeof(t->second->m_events.begin()) e = t->second->m_events.begin(); e != t->second->m_events.end(); ++e ) {
+				std::string event_xml = (*e)->XMLTV(channel);
+				printf("%s\n", event_xml.c_str());
+			}
+		}
 	}
-
-	printf("%04x/%04x/%04x has updated data (%lu events in total)\n",
-		it->second.m_chan.original_network_id,
-		it->second.m_chan.transport_stream_id,
-		it->second.m_chan.service_id,
-		events);
+	printf("</tv>\n");
 }

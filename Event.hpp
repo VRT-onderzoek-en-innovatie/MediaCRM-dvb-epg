@@ -6,6 +6,7 @@
 #include <time.h>
 #include "Descriptor/Descriptor.hpp"
 #include <list>
+#include <string>
 
 class Event {
 public:
@@ -29,6 +30,8 @@ public:
 
 	Event(const unsigned char **event);
 	~Event();
+
+	std::string XMLTV(char* channel) const;
 };
 
 #endif // __EVENT_HPP__
