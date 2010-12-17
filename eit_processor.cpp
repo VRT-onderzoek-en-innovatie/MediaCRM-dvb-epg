@@ -207,14 +207,14 @@ EIT_processor_channel_table::~EIT_processor_channel_table() {
 }
 
 void EIT_processor_channel::table_done(uint8_t table_id) {
-	typeof(m_tables_processing.begin()) it = m_tables_processing.find(table_id);
+	typeof(m_tables_processing.begin()) new_it = m_tables_processing.find(table_id);
 	m_tables.erase(table_id);
-	m_tables.insert( std::pair<uint8_t, EIT_processor_channel_table* >( table_id, it->second ) );
-	m_tables_processing.erase(it);
+	m_tables.insert( std::pair<uint8_t, EIT_processor_channel_table* >( table_id, new_it->second ) );
+	m_tables_processing.erase(new_it);
 
 	fprintf(stderr, "%04x/%04x/%04x updated data in table %02x (v%d)\n",
 		m_chan.original_network_id, m_chan.transport_stream_id, m_chan.service_id,
-		table_id, it->second->m_version);
+		table_id, new_it->second->m_version);
 
 	m_parent->channel_done(m_chan);
 }
