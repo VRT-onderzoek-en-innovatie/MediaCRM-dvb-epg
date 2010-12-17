@@ -207,8 +207,13 @@ EIT_processor_channel_table::~EIT_processor_channel_table() {
 }
 
 void EIT_processor_channel::table_done(uint8_t table_id) {
+	typeof(m_tables.begin()) current_it = m_tables.find(table_id);
+	if( current_it != m_tables.end() ) {
+		delete current_it->second;
+		m_tables.erase(current_it);
+	}
+
 	typeof(m_tables_processing.begin()) new_it = m_tables_processing.find(table_id);
-	m_tables.erase(table_id);
 	m_tables.insert( std::pair<uint8_t, EIT_processor_channel_table* >( table_id, new_it->second ) );
 	m_tables_processing.erase(new_it);
 
