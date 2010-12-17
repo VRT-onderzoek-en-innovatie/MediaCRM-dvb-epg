@@ -8,9 +8,6 @@ namespace Descriptor {
 const char* encoding(const char **text) {
 	switch(*(*text)++) {
 	case 0x00: return "ISO-8859-15"; // approximately; TODO: define the correct table
-	case 0x03: return "ISO-8859-7";
-	case 0x07: return "ISO-8859-11";
-	case 0x0e: return "ISO-8859-15"; // Unknown, TODO: fix this
 	case 0x10:
 		switch( *(*text)++ ) {
 		case 0x00:
