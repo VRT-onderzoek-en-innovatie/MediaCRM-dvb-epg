@@ -65,7 +65,7 @@ std::string Event::XMLTV(char* channel) const {
 		struct tm *start_datetime;
 		start_datetime = localtime(&m_start);
 		char buffer[21];
-		strftime(buffer, sizeof(buffer), "%Y%m%d%H%M%S +0000", start_datetime);
+		strftime(buffer, sizeof(buffer), "%Y%m%d%H%M%S %Z", start_datetime);
 		ret += " start=\"";
 		ret.append(buffer);
 		ret += "\"";
@@ -75,7 +75,7 @@ std::string Event::XMLTV(char* channel) const {
 		struct tm *stop_datetime;
 		stop_datetime = localtime(&stop);
 		char buffer[21];
-		strftime(buffer, sizeof(buffer), "%Y%m%d%H%M%S +0000", stop_datetime);
+		strftime(buffer, sizeof(buffer), "%Y%m%d%H%M%S %Z", stop_datetime);
 		ret += " stop=\"";
 		ret.append(buffer);
 		ret += "\"";
