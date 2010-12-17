@@ -47,11 +47,45 @@ Event::~Event() {
 
 std::string Event::XMLTV(char* channel) const {
 	std::string ret;
-	ret += "<programme channel=\"";
-	ret += channel;
-	ret += "\" id=\"\" start=\"\" stop=\"\">";
 
-	ret += "<title></title>";
+	ret += "<programme";
+	{
+		ret += " channel=\"";
+		ret.append(channel);
+		ret += "\"";
+	}
+	{
+		char buffer[6];
+		sprintf(buffer, "%d", m_event_id); // 16bit, 65535 max => 6 bytes is enough;
+		ret += " id=\"";
+		ret.append(buffer);
+		ret += "\"";
+	}
+	{
+		struct tm *start_datetime;
+		start_datetime = localtime(&m_start);
+		char buffer[21];
+		strftime(buffer, sizeof(buffer), "%Y%m%d%H%M%S +0000", start_datetime);
+		ret += " start=\"";
+		ret.append(buffer);
+		ret += "\"";
+	}
+	{
+		time_t stop = m_start + m_duration;
+		struct tm *stop_datetime;
+		stop_datetime = localtime(&stop);
+		char buffer[21];
+		strftime(buffer, sizeof(buffer), "%Y%m%d%H%M%S +0000", stop_datetime);
+		ret += " stop=\"";
+		ret.append(buffer);
+		ret += "\"";
+	}
+	ret += ">";
+	
+	for( typeof(m_descriptors.begin()) d = m_descriptors.begin(); d != m_descriptors.end(); ++d ) {
+		ret += (*d)->XMLTV();
+	}
+
 	ret += "</programme>";
 	return ret;
 }

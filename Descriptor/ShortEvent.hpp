@@ -16,6 +16,8 @@ public:
 
 	ShortEvent(const unsigned char **descriptor);
 	~ShortEvent();
+
+	virtual std::string XMLTV() const;
 };
 
 } // namespace
