@@ -137,6 +137,9 @@ EIT_processor_channel::~EIT_processor_channel() {
 	for( typeof(m_tables_processing.begin()) it = m_tables_processing.begin(); it != m_tables_processing.end(); ++it) {
 		delete it->second;
 	}
+	for( typeof(m_tables.begin()) it = m_tables.begin(); it != m_tables.end(); ++it) {
+		delete it->second;
+	}
 }
 
 EIT_processor_channel_table::EIT_processor_channel_table(EIT_processor_channel *parent, uint8_t ver) :
