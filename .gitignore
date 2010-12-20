@@ -1,4 +1,5 @@
 *.swp
 *.o
 eit
+xml_chop
 tests/CRC
