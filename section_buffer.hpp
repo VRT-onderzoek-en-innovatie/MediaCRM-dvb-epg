@@ -2,6 +2,7 @@
 #define __SECTION_BUFFER_HPP__
 
 #include <map>
+#include <stdint.h>
 #include "Buffer.hpp"
 
 #define TS_PACKET_SIZE 188
