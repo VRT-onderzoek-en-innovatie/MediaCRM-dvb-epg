@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <math.h>
 #include <stdio.h>
+#include "util.hpp"
 
 inline int cyclic_compare(int a, int b, int wrap) {
 	if( abs(a-b) < wrap/2 ) return a-b;
@@ -29,6 +30,14 @@ void EIT_processor::process_sections(const unsigned char *sections, size_t nsect
 		uint16_t section_length = ((sections[1]&0x0f)<<8) | sections[2];
 
 		if( table_id == 0xff ) { // padding table, skip
+			sections += 3 + section_length;
+			continue;
+		}
+		if( table_id == 0x70 ) {
+			// TimeDate Table
+			assert( (sections[1]&0x80) == 0x00 ); // sections syntax indicator
+			m_current_datetime = mjd_decode(sections[3]<<8 | sections[4])
+				+ bcd_decode(sections[5])*3600 + bcd_decode(sections[6])*60 + bcd_decode(sections[7]);
 			sections += 3 + section_length;
 			continue;
 		}

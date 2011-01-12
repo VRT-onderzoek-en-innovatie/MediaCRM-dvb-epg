@@ -52,6 +52,7 @@ public:
 class EIT_processor: public Section_Processor {
 public:
 	std::map< struct channel_id, EIT_processor_channel > m_channels;
+	time_t m_current_datetime;
 
 	virtual void process_sections(const unsigned char *sections, size_t nsections);
 	void channel_done(struct channel_id chan);
