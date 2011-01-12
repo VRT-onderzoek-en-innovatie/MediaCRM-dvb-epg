@@ -1,4 +1,6 @@
 #include "util.hpp"
+#include <assert.h>
+#include <math.h>
 
 uint8_t bcd_decode(uint8_t in) {
 	assert( (in&0x0f) <= 0x09 );
