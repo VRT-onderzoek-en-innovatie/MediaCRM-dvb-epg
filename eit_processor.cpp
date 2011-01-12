@@ -26,7 +26,6 @@ void EIT_processor::process_sections(const unsigned char *sections, size_t nsect
 
 		assert(sections_end-sections >= 3); // only tag & length
 
-		assert( (sections[1]&0x80) == 0x80 ); // sections syntax indicator
 		uint16_t section_length = ((sections[1]&0x0f)<<8) | sections[2];
 
 		if( table_id == 0xff ) { // padding table, skip
@@ -46,6 +45,7 @@ void EIT_processor::process_sections(const unsigned char *sections, size_t nsect
 		}
 
 		assert( table_id >= 0x50 && table_id <= 0x6f );
+		assert( (sections[1]&0x80) == 0x80 ); // sections syntax indicator
 
 		uint16_t service_id = (sections[3]<<8) | sections[4];
 		uint8_t version_number = (sections[5]&0x3e)>>1;
