@@ -1,6 +1,7 @@
 #include "eit_processor.hpp"
 #include "CRC32.hpp"
 #include "debug.h"
+#include <stdlib.h>
 #include <stdint.h>
 #include <math.h>
 #include <stdio.h>

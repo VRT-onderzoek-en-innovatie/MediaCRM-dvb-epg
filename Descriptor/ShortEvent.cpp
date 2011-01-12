@@ -2,6 +2,7 @@
 #include <string.h>
 #include <iconv.h>
 #include <assert.h>
+#include <stdio.h>
 
 namespace Descriptor {
 
