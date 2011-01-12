@@ -41,6 +41,11 @@ void EIT_processor::process_sections(const unsigned char *sections, size_t nsect
 			sections += 3 + section_length;
 			continue;
 		}
+		if( table_id == 0x73 ) {
+			// Time Offset Table, ignore
+			sections += 3 + section_length;
+			continue;
+		}
 		if( table_id == 0x4e || table_id == 0x4f ) {
 			// now/next tables, we want more!
 			sections += 3 + section_length;
