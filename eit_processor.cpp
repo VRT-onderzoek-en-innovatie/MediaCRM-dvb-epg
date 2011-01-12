@@ -235,7 +235,15 @@ void EIT_processor_channel::table_done(uint8_t table_id) {
 }
 
 void EIT_processor::channel_done(struct channel_id chan) {
-	printf("<tv source-info-name=\"DVB EIT\">\n");
+	printf("<tv source-info-name=\"DVB EIT\"");
+	{
+		struct tm *source_timestamp;
+		source_timestamp = localtime(&m_current_datetime);
+		char buffer[21];
+		strftime(buffer, sizeof(buffer), "%Y%m%d%H%M%S %Z", source_timestamp);
+		printf(" date=\"%s\"", buffer);
+	}
+	printf(">\n");
 	for( typeof(m_channels.begin()) ch = m_channels.begin(); ch != m_channels.end(); ++ch ) {
 		char channel[15];
 		sprintf(channel, "%04x:%04x:%04x", 
