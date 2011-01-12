@@ -226,7 +226,7 @@ void EIT_processor_channel::table_done(uint8_t table_id) {
 }
 
 void EIT_processor::channel_done(struct channel_id chan) {
-	printf("<tv>\n");
+	printf("<tv source-info-name=\"DVB EIT\">\n");
 	for( typeof(m_channels.begin()) ch = m_channels.begin(); ch != m_channels.end(); ++ch ) {
 		char channel[15];
 		sprintf(channel, "%04x:%04x:%04x", 
