@@ -60,7 +60,7 @@ std::string ShortEvent::XMLTV() const {
 	{ 
 		ret += "<title lang=\"";
 		ret += m_ISO_639_language_code;
-		ret += "\">";
+		ret += "\"><![CDATA[";
 
 		const char* t = m_event_name;
 		const char* t_end = m_event_name + m_nevent_name;
@@ -81,12 +81,12 @@ std::string ShortEvent::XMLTV() const {
 	
 			ret.append(text_utf8, sizeof(text_utf8)-nout);
 		}
-		ret += "</title>";
+		ret += "]]></title>";
 	}
 	if( m_ntext > 0 ) {
 		ret += "<desc lang=\"";
 		ret += m_ISO_639_language_code;
-		ret += "\">";
+		ret += "\"><![CDATA[";
 
 		const char* t = m_text;
 		const char* t_end = m_text + m_ntext;
@@ -107,7 +107,7 @@ std::string ShortEvent::XMLTV() const {
 	
 			ret.append(text_utf8, sizeof(text_utf8)-nout);
 		}
-		ret += "</desc>";
+		ret += "]]></desc>";
 	}
 
 	return ret;
