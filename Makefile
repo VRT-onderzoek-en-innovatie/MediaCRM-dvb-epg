@@ -1,7 +1,7 @@
 all: eit xml_chop
 clean:
-	-rm *.o
-	-rm eit
+	-rm -f *.o
+	-rm -f eit xml_chop
 
 test:
 	$(MAKE) -C tests test
