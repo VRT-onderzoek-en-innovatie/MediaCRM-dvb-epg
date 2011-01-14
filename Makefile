@@ -1,8 +1,9 @@
 all: eit xml_chop
 clean:
 	-rm -f Makefile.includes
-	-rm -f *.o
+	-rm -f *.o Descriptor/*.o
 	-rm -f eit xml_chop
+	$(MAKE) -C tests clean
 
 test:
 	$(MAKE) -C tests test
